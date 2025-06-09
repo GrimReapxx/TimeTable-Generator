@@ -14,14 +14,7 @@ import {
 } from '../utils/scheduleUtils';
 
 import {
-  exportScheduleAsJSON,
   exportScheduleAsCSV,
-  exportScheduleAsHTML,
-  exportScheduleForPDF,
-  exportConflictsReport,
-  exportStatistics,
-  exportMultipleFormats,
-  importScheduleFromJSON,
   generateTimestampedFilename
 } from '../utils/exportSchedule';
 
@@ -131,73 +124,12 @@ export const useTimetableLogic = ({
   }, [schedule, courses, rooms]);
   
     // Export functions
-  const exportAsJSON = useCallback((filename) => {
-    const defaultFilename = filename || generateTimestampedFilename('timetable', 'json');
-    const currentConflicts = detectScheduleConflicts(schedule);
-    exportScheduleAsJSON(schedule, courses, rooms, currentConflicts, defaultFilename);
-  }, [schedule, courses, rooms]);
-
   const exportAsCSV = useCallback((filename) => {
     const defaultFilename = filename || generateTimestampedFilename('timetable', 'csv');
     exportScheduleAsCSV(schedule, days, timeSlots, defaultFilename);
   }, [schedule, days, timeSlots]);
 
-  const exportAsHTML = useCallback((filename) => {
-    const defaultFilename = filename || generateTimestampedFilename('timetable', 'html');
-    exportScheduleAsHTML(schedule, days, timeSlots, defaultFilename);
-  }, [schedule, days, timeSlots]);
-
-  const exportForPDF = useCallback((filename) => {
-    const defaultFilename = filename || generateTimestampedFilename('timetable_pdf', 'html');
-    exportScheduleForPDF(schedule, days, timeSlots, defaultFilename);
-  }, [schedule, days, timeSlots]);
-
-  const exportConflicts = useCallback((filename) => {
-    const currentConflicts = detectScheduleConflicts(schedule);
-    const defaultFilename = filename || generateTimestampedFilename('conflicts_report', 'json');
-    exportConflictsReport(currentConflicts, defaultFilename);
-  }, [schedule]);
-
-  const exportScheduleStatistics = useCallback((filename) => {
-    const stats = getScheduleStatistics(schedule, courses, rooms);
-    const defaultFilename = filename || generateTimestampedFilename('schedule_statistics', 'json');
-    exportStatistics(stats, defaultFilename);
-  }, [schedule, courses, rooms]);
-
-  const exportMultiple = useCallback((formats = ['json']) => {
-    const currentConflicts = detectScheduleConflicts(schedule);
-    exportMultipleFormats(schedule, courses, rooms, days, timeSlots, currentConflicts, formats);
-  }, [schedule, courses, rooms, days, timeSlots]);
-
-  // Import function
-  const importFromJSON = useCallback(async (file) => {
-    try {
-      const importedData = await importScheduleFromJSON(file);
-      
-      // Validate and merge imported data
-      if (importedData.schedule) {
-        setSchedule(importedData.schedule);
-        checkConflicts(importedData.schedule);
-      }
-      
-      return {
-        success: true,
-        data: importedData,
-        message: 'Schedule imported successfully'
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message,
-        message: 'Failed to import schedule'
-      };
-    }
-  }, [setSchedule, checkConflicts]);
-
-  // Legacy export function for backward compatibility
-  // const exportSchedule = useCallback(() => {
-  //   exportAsJSON();
-  // }, [exportAsJSON]);
+  
   
   return {
     getSlotKey,
@@ -209,14 +141,6 @@ export const useTimetableLogic = ({
     validateAssignment,
     checkSlotAvailability,
     getStatistics,
-    exportAsJSON,
-    exportAsCSV,
-    exportAsHTML,
-    exportForPDF,
-    exportConflicts,
-    exportScheduleStatistics,
-    exportMultiple,
-    importFromJSON
-  // exportSchedule // Uncomment if you want to keep the legacy export function
+    exportAsCSV
   };
 };

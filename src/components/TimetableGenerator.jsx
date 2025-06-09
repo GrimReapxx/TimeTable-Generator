@@ -9,6 +9,7 @@ import StatisticsPanel from './StatisticsPanel';
 import ConflictAlert from './ConflictAlert';
 import { useTimetableData } from '../hooks/TimetableData';
 import { useTimetableLogic } from '../hooks/TimetableLogic';
+import { exportScheduleAsPDF } from '../utils/exportSchedule';
 
 
 const TimetableGenerator = () => {
@@ -29,7 +30,8 @@ const TimetableGenerator = () => {
     removeAssignment,
     autoGenerate,
     clearSchedule,
-    exportSchedule
+    exportAsCSV,
+    exportMultiple
   } = useTimetableLogic({
     courses,
     rooms,
@@ -54,6 +56,23 @@ const TimetableGenerator = () => {
     setSelectedCell(null);
   };
 
+  // Handle export with format
+  const handleExport = (format) => {
+    switch (format) {
+      case 'xlsx':
+        exportMultiple(['xlsx']);
+        break;
+      case 'csv':
+        exportAsCSV();
+        break;
+      case 'pdf':
+        exportScheduleAsPDF(schedule, days, timeSlots);
+        break;
+      default:
+        exportMultiple(['xlsx']);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
       <div className="max-w-7xl mx-auto">
@@ -64,7 +83,7 @@ const TimetableGenerator = () => {
           conflicts={conflicts}
           onAutoGenerate={autoGenerate}
           onClear={clearSchedule}
-          onExport={exportSchedule}
+          onExport={handleExport}
         />
 
         <ConflictAlert conflicts={conflicts} />

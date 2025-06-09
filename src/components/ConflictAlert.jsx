@@ -1,4 +1,4 @@
-// components/ConflictAlert.jsx - Conflict Display Component
+// Conflict Display Component
 import React from 'react';
 import { AlertCircle } from 'lucide-react';
 

@@ -4,8 +4,8 @@ const AssignmentDialog = ({ selectedCell, courses, rooms, onAssign, onClose }) =
   if (!selectedCell) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-96 max-w-90vw">
+    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/30">
+      <div className="bg-white rounded-lg p-6 w-96 max-w-90vw shadow-xl">
         <h3 className="text-lg font-semibold mb-4">
           Assign Class - {selectedCell.day} {selectedCell.timeSlot}
         </h3>
