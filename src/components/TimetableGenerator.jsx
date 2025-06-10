@@ -1,16 +1,35 @@
 // Main Business Logic Component
-
 import { useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 import Header from './Header';
 import TimetableGrid from './TimetableGrid';
 import AssignmentDialog from './AssignmentDialog';
 import StatisticsPanel from './StatisticsPanel';
-import ConflictAlert from './ConflictAlert';
 import { useTimetableData } from '../hooks/TimetableData';
 import { useTimetableLogic } from '../hooks/TimetableLogic';
 import { exportScheduleAsPDF } from '../utils/exportSchedule';
 
+// Loader CSS (Bars from cssloader.com/bars)
+const loaderStyle = {
+  display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px'
+};
+const BarsLoader = () => (
+  <div style={loaderStyle}>
+    <div className="bars-loader" style={{ display: 'flex', gap: '4px' }}>
+      <div style={{ width: '8px', height: '40px', background: '#6366f1', animation: 'bars 1s infinite alternate', animationDelay: '0s' }}></div>
+      <div style={{ width: '8px', height: '40px', background: '#6366f1', animation: 'bars 1s infinite alternate', animationDelay: '0.2s' }}></div>
+      <div style={{ width: '8px', height: '40px', background: '#6366f1', animation: 'bars 1s infinite alternate', animationDelay: '0.4s' }}></div>
+      <div style={{ width: '8px', height: '40px', background: '#6366f1', animation: 'bars 1s infinite alternate', animationDelay: '0.6s' }}></div>
+      <div style={{ width: '8px', height: '40px', background: '#6366f1', animation: 'bars 1s infinite alternate', animationDelay: '0.8s' }}></div>
+    </div>
+    <style>{`
+      @keyframes bars {
+        0% { transform: scaleY(1); }
+        100% { transform: scaleY(0.3); }
+      }
+    `}</style>
+  </div>
+);
 
 const TimetableGenerator = () => {
   // Data from custom hook
@@ -18,14 +37,12 @@ const TimetableGenerator = () => {
   
   // State management
   const [schedule, setSchedule] = useState({});
-  const [conflicts, setConflicts] = useState([]);
   const [selectedCell, setSelectedCell] = useState(null);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Business logic from custom hook/utils
   const {
-    // getSlotKey,
-    // checkConflicts,
     assignCourse,
     removeAssignment,
     autoGenerate,
@@ -39,7 +56,6 @@ const TimetableGenerator = () => {
     timeSlots,
     schedule,
     setSchedule,
-    setConflicts,
     setShowAssignDialog,
     setSelectedCell
   });
@@ -69,8 +85,17 @@ const TimetableGenerator = () => {
         exportScheduleAsPDF(schedule, days, timeSlots);
         break;
       default:
-        exportMultiple(['xlsx']);
+        console.warn(`Unsupported export format: ${format}`);
     }
+  };
+
+  // Handle auto-generate with loader
+  const handleAutoGenerate = async () => {
+    setLoading(true);
+    // Simulate async for smoother UX (GA-inspired logic is sync, but can be wrapped)
+    await new Promise(res => setTimeout(res, 100));
+    autoGenerate();
+    setTimeout(() => setLoading(false), 300); // allow UI to update
   };
 
   return (
@@ -80,22 +105,22 @@ const TimetableGenerator = () => {
           courses={courses}
           rooms={rooms}
           schedule={schedule}
-          conflicts={conflicts}
-          onAutoGenerate={autoGenerate}
+          onAutoGenerate={handleAutoGenerate}
           onClear={clearSchedule}
           onExport={handleExport}
         />
 
-        <ConflictAlert conflicts={conflicts} />
-
-        <TimetableGrid 
-          days={days}
-          timeSlots={timeSlots}
-          schedule={schedule}
-          conflicts={conflicts}
-          onCellClick={handleCellClick}
-          onRemoveAssignment={removeAssignment}
-        />
+        {loading ? (
+          <BarsLoader />
+        ) : (
+          <TimetableGrid 
+            days={days}
+            timeSlots={timeSlots}
+            schedule={schedule}
+            onCellClick={handleCellClick}
+            onRemoveAssignment={removeAssignment}
+          />
+        )}
 
         {showAssignDialog && (
           <AssignmentDialog
@@ -111,7 +136,6 @@ const TimetableGenerator = () => {
           courses={courses}
           rooms={rooms}
           schedule={schedule}
-          conflicts={conflicts}
         />
       </div>
     </div>

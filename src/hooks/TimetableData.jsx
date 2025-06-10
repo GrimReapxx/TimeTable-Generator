@@ -5,66 +5,66 @@ export const useTimetableData = () => {
   const [courses] = useState([
     { 
       id: 1, 
-      name: 'Computer Science 101', 
-      code: 'CS101', 
+      name: 'Computer Science 324', 
+      code: 'CS324', 
       credits: 3, 
       lecturer: 'Mr. Obinna', 
       duration: 2 
     },
     { 
       id: 2, 
-      name: 'Mathematics', 
-      code: 'MATH201', 
-      credits: 4, 
-      lecturer: 'Prof. Eve', 
+      name: 'Computer Science 321', 
+      code: 'CS321', 
+      credits: 3, 
+      lecturer: 'Mr. Obinna', 
       duration: 2 
     },
     { 
       id: 3, 
-      name: 'Physics', 
-      code: 'PHY101', 
+      name: 'Entreprenurial Development', 
+      code: 'ENT327', 
       credits: 3, 
-      lecturer: 'Dr. James', 
+      lecturer: 'Mrs. Matuluko', 
       duration: 1.5 
     },
     { 
       id: 4, 
-      name: 'Chemistry', 
-      code: 'CHEM101', 
+      name: 'Computer Science 323', 
+      code: 'CS323', 
       credits: 3, 
-      lecturer: 'Dr. Yekken', 
+      lecturer: 'Mr. Yekeen', 
       duration: 2 
     },
     { 
       id: 5, 
-      name: 'Computer Science 201', 
-      code: 'CS201', 
+      name: 'Computer Science 325', 
+      code: 'CS325', 
       credits: 3, 
-      lecturer: 'Dr. Ada', 
+      lecturer: 'Mr. Yekeen', 
       duration: 2 
     },
     { 
       id: 6, 
-      name: 'Computer Science 202', 
-      code: 'CS202', 
+      name: 'Computer Science 322', 
+      code: 'CS322', 
       credits: 3, 
-      lecturer: 'Dr. Turing', 
+      lecturer: 'Mr. Obinna', 
       duration: 2 
     },
     { 
       id: 7, 
-      name: 'Computer Science 203', 
-      code: 'CS203', 
+      name: 'Mathematics 221', 
+      code: 'MAT221', 
       credits: 3, 
-      lecturer: 'Dr. Hopper', 
+      lecturer: 'Mrs. Eze', 
       duration: 2 
     },
     { 
       id: 8, 
-      name: 'Computer Science 204', 
-      code: 'CS204', 
+      name: 'French 301', 
+      code: 'FRN301', 
       credits: 3, 
-      lecturer: 'Dr. Linus', 
+      lecturer: 'Mrs. Rock', 
       duration: 2 
     }
   ]);

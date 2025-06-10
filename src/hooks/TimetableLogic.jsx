@@ -3,7 +3,6 @@
 import { useCallback } from 'react';
 import {
   generateSlotKey,
-  detectScheduleConflicts,
   createScheduleAssignment,
   addScheduleAssignment,
   removeScheduleAssignment,
@@ -15,6 +14,7 @@ import {
 
 import {
   exportScheduleAsCSV,
+  exportScheduleAsXLSX,
   generateTimestampedFilename
 } from '../utils/exportSchedule';
 
@@ -25,21 +25,13 @@ export const useTimetableLogic = ({
   timeSlots,
   schedule,
   setSchedule,
-  setConflicts,
   setShowAssignDialog,
   setSelectedCell
 }) => {
-  
   // Generate a unique key for schedule slots (using utility)
   const getSlotKey = useCallback((day, timeSlot) => {
     return generateSlotKey(day, timeSlot);
   }, []);
-
-  // Check for conflicts in the schedule (using utility)
-  const checkConflicts = useCallback((newSchedule) => {
-    const conflicts = detectScheduleConflicts(newSchedule);
-    setConflicts(conflicts);
-  }, [setConflicts]);
 
   // Assign a course to a time slot
   const assignCourse = useCallback((day, timeSlot, courseId, roomId) => {
@@ -56,8 +48,8 @@ export const useTimetableLogic = ({
     const slotKey = getSlotKey(day, timeSlot);
     
     // Check if slot is available
-    if (!isSlotAvailable(schedule, slotKey, course.lecturer, room.name)) {
-      console.warn('Slot is not available due to conflicts');
+    if (!isSlotAvailable(schedule, slotKey)) {
+      console.warn('Slot is not available');
     }
 
     // Create assignment and update schedule
@@ -65,7 +57,6 @@ export const useTimetableLogic = ({
     const newSchedule = addScheduleAssignment(schedule, slotKey, assignment);
 
     setSchedule(newSchedule);
-    checkConflicts(newSchedule);
     setShowAssignDialog(false);
     setSelectedCell(null);
   }, [
@@ -73,7 +64,6 @@ export const useTimetableLogic = ({
     rooms, 
     schedule, 
     getSlotKey, 
-    checkConflicts, 
     setSchedule, 
     setShowAssignDialog, 
     setSelectedCell
@@ -84,21 +74,18 @@ export const useTimetableLogic = ({
     const slotKey = getSlotKey(day, timeSlot);
     const newSchedule = removeScheduleAssignment(schedule, slotKey);
     setSchedule(newSchedule);
-    checkConflicts(newSchedule);
-  }, [schedule, getSlotKey, checkConflicts, setSchedule]);
+  }, [schedule, getSlotKey, setSchedule]);
 
   // Auto-generate basic schedule (using utility)
   const autoGenerate = useCallback(() => {
     const newSchedule = generateAutoSchedule(courses, rooms, days, timeSlots);
     setSchedule(newSchedule);
-    checkConflicts(newSchedule);
-  }, [courses, rooms, days, timeSlots, checkConflicts, setSchedule]);
+  }, [courses, rooms, days, timeSlots, setSchedule]);
 
   // Clear schedule
   const clearSchedule = useCallback(() => {
     setSchedule({});
-    setConflicts([]);
-  }, [setSchedule, setConflicts]);
+  }, [setSchedule]);
 
   // Validate a potential assignment
   const validateAssignment = useCallback((courseId, roomId, day, timeSlot) => {
@@ -115,7 +102,7 @@ export const useTimetableLogic = ({
     if (!course || !room) return false;
     
     const slotKey = getSlotKey(day, timeSlot);
-    return isSlotAvailable(schedule, slotKey, course.lecturer, room.name);
+    return isSlotAvailable(schedule, slotKey);
   }, [courses, rooms, schedule, getSlotKey]);
 
   // Get schedule statistics
@@ -123,17 +110,30 @@ export const useTimetableLogic = ({
     return getScheduleStatistics(schedule, courses, rooms);
   }, [schedule, courses, rooms]);
   
-    // Export functions
+  // Export functions
   const exportAsCSV = useCallback((filename) => {
     const defaultFilename = filename || generateTimestampedFilename('timetable', 'csv');
     exportScheduleAsCSV(schedule, days, timeSlots, defaultFilename);
   }, [schedule, days, timeSlots]);
 
-  
-  
+  const exportMultiple = useCallback((formats) => {
+    formats.forEach(format => {
+      const filename = generateTimestampedFilename('timetable', format);
+      switch (format) {
+        case 'xlsx':
+          exportScheduleAsXLSX(schedule, days, timeSlots, filename);
+          break;
+        case 'csv':
+          exportScheduleAsCSV(schedule, days, timeSlots, filename);
+          break;
+        default:
+          console.warn(`Unsupported export format: ${format}`);
+      }
+    });
+  }, [schedule, days, timeSlots]);
+
   return {
     getSlotKey,
-    checkConflicts,
     assignCourse,
     removeAssignment,
     autoGenerate,
@@ -141,6 +141,7 @@ export const useTimetableLogic = ({
     validateAssignment,
     checkSlotAvailability,
     getStatistics,
-    exportAsCSV
+    exportAsCSV,
+    exportMultiple
   };
 };

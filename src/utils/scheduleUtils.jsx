@@ -11,53 +11,6 @@ export const generateSlotKey = (day, timeSlot) => {
 };
 
 /**
- * Check for scheduling conflicts in a given schedule
- * @param {Object} schedule - Current schedule object
- * @returns {Array} Array of conflict objects
- */
-export const detectScheduleConflicts = (schedule) => {
-  const conflicts = [];
-  const lecturerSlots = {};
-  const roomSlots = {};
-
-  Object.entries(schedule).forEach(([slotKey, assignment]) => {
-    if (!assignment) return;
-
-    // Check lecturer conflicts
-    if (lecturerSlots[assignment.lecturer]?.includes(slotKey)) {
-      conflicts.push({
-        type: 'lecturer',
-        message: `${assignment.lecturer} has overlapping classes`,
-        slot: slotKey,
-        severity: 'high'
-      });
-    } else {
-      if (!lecturerSlots[assignment.lecturer]) {
-        lecturerSlots[assignment.lecturer] = [];
-      }
-      lecturerSlots[assignment.lecturer].push(slotKey);
-    }
-
-    // Check room conflicts
-    if (roomSlots[assignment.room]?.includes(slotKey)) {
-      conflicts.push({
-        type: 'room',
-        message: `${assignment.room} is double-booked`,
-        slot: slotKey,
-        severity: 'high'
-      });
-    } else {
-      if (!roomSlots[assignment.room]) {
-        roomSlots[assignment.room] = [];
-      }
-      roomSlots[assignment.room].push(slotKey);
-    }
-  });
-
-  return conflicts;
-};
-
-/**
  * Create a schedule assignment object
  * @param {Object} course - Course object
  * @param {Object} room - Room object
@@ -101,78 +54,70 @@ export const addScheduleAssignment = (schedule, slotKey, assignment) => {
 };
 
 /**
- * Check if a slot is available (no conflicts)
+ * Check if a slot is available (just checks if slot is empty)
  * @param {Object} schedule - Current schedule
  * @param {string} slotKey - Slot key to check
- * @param {string} lecturer - Lecturer name
- * @param {string} room - Room name
  * @returns {boolean} True if slot is available
  */
-export const isSlotAvailable = (schedule, slotKey, lecturer, room) => {
-  // Check if slot is already occupied
-  if (schedule[slotKey]) {
-    return false;
-  }
-
-  // Check for lecturer conflicts
-  const lecturerConflict = Object.entries(schedule).some(([key, assignment]) => 
-    key === slotKey && assignment?.lecturer === lecturer
-  );
-
-  // Check for room conflicts
-  const roomConflict = Object.entries(schedule).some(([key, assignment]) => 
-    key === slotKey && assignment?.room === room
-  );
-
-  return !lecturerConflict && !roomConflict;
+export const isSlotAvailable = (schedule, slotKey) => {
+  return !schedule[slotKey];
 };
 
-/**
- * Generate automatic schedule based on courses and constraints
- * @param {Array} courses - Array of course objects
- * @param {Array} rooms - Array of room objects
- * @param {Array} days - Array of day strings
- * @param {Array} timeSlots - Array of time slot strings
- * @returns {Object} Generated schedule object
- */
-export const generateAutoSchedule = (courses, rooms, days, timeSlots) => {
+// Helper: Generate a random timetable
+function generateRandomTimetable(courses, rooms, days, timeSlots) {
   const schedule = {};
   const usedSlots = new Set();
-  const lecturerSchedule = {};
+  const allSlots = [];
+  days.forEach(day => timeSlots.forEach(ts => allSlots.push({ day, timeSlot: ts })));
 
-  courses.forEach((course, index) => {
+  // Shuffle slots
+  for (let i = allSlots.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [allSlots[i], allSlots[j]] = [allSlots[j], allSlots[i]];
+  }
+
+  for (let i = 0; i < courses.length; i++) {
+    const course = courses[i];
     let assigned = false;
-    
-    // Try to find an available slot
-    for (let dayIndex = 0; dayIndex < days.length && !assigned; dayIndex++) {
-      for (let timeIndex = 0; timeIndex < timeSlots.length && !assigned; timeIndex++) {
-        const day = days[dayIndex];
-        const timeSlot = timeSlots[timeIndex];
-        const slotKey = generateSlotKey(day, timeSlot);
-        
-        // Check if slot is available and lecturer is free
-        if (!usedSlots.has(slotKey) && 
-            !lecturerSchedule[course.lecturer]?.includes(slotKey)) {
-          
-          // Assign room (simple round-robin assignment)
-          const room = rooms[index % rooms.length];
-          
-          // Create assignment
-          schedule[slotKey] = createScheduleAssignment(course, room);
-          
-          // Track used slots and lecturer schedule
-          usedSlots.add(slotKey);
-          if (!lecturerSchedule[course.lecturer]) {
-            lecturerSchedule[course.lecturer] = [];
-          }
-          lecturerSchedule[course.lecturer].push(slotKey);
-          assigned = true;
-        }
+    for (let s = 0; s < allSlots.length && !assigned; s++) {
+      const { day, timeSlot } = allSlots[s];
+      const slotKey = generateSlotKey(day, timeSlot);
+      if (!usedSlots.has(slotKey)) {
+        const room = rooms[i % rooms.length];
+        schedule[slotKey] = createScheduleAssignment(course, room);
+        usedSlots.add(slotKey);
+        assigned = true;
       }
     }
-  });
-
+  }
   return schedule;
+}
+
+// Helper: Fitness function (now only penalizes unbalanced distribution)
+function scoreTimetable(schedule, courses, days) {
+  // Penalize unbalanced distribution (prefer even spread across days)
+  const dayCounts = days.map(day =>
+    Object.keys(schedule).filter(k => k.startsWith(day + '-')).length
+  );
+  const max = Math.max(...dayCounts), min = Math.min(...dayCounts);
+  let spreadPenalty = max - min; // lower is better
+  return -spreadPenalty; // higher is better
+}
+
+// Main: GA-inspired auto-schedule
+export const generateAutoSchedule = (courses, rooms, days, timeSlots) => {
+  const NUM_CANDIDATES = 50;
+  let bestSchedule = null;
+  let bestScore = -Infinity;
+  for (let i = 0; i < NUM_CANDIDATES; i++) {
+    const candidate = generateRandomTimetable(courses, rooms, days, timeSlots);
+    const score = scoreTimetable(candidate, courses, days);
+    if (score > bestScore) {
+      bestScore = score;
+      bestSchedule = candidate;
+    }
+  }
+  return bestSchedule;
 };
 
 /**
