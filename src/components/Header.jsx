@@ -8,7 +8,7 @@ const EXPORT_OPTIONS = [
   { label: 'PDF (.pdf)', value: 'pdf' },
 ];
 
-const Header = ({ courses, rooms, schedule, conflicts, onAutoGenerate, onClear, onExport }) => {
+const Header = ({ courses, rooms, schedule, onAutoGenerate, onClear, onExport }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -87,7 +87,7 @@ const Header = ({ courses, rooms, schedule, conflicts, onAutoGenerate, onClear, 
           </div>
         </div>
       </div>
-      <StatusBar courses={courses} rooms={rooms} schedule={schedule} conflicts={conflicts} />
+      <StatusBar courses={courses} rooms={rooms} schedule={schedule} />
     </div>
   );
 };
